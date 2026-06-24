@@ -41,4 +41,12 @@ issues regarding our products, services, or website
 
 ---
 
-<sub>Thank you for helping keep Advans IT Solutions and our users safe.</sub>
+**Advans IT Solutions GmbH**  
+Karl-Barth-Platz 9  
+4052 Basel  
+Switzerland  
+CHE-316.407.165
+
+https://advans.ch
+
+<sub>We build software to the highest standards of quality and security — thank you for helping us keep that promise.</sub>
