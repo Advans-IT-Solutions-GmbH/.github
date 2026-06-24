@@ -8,9 +8,9 @@ on:
         type: string
         default: "p/security-audit p/secrets p/github-actions p/javascript p/php p/python"
       fail_on_findings:
-        description: "Fail the job when issues are found. Report-only (false) by default."
+        description: "Fail the job when issues are found."
         type: boolean
-        default: false
+        default: true
       zizmor_min_severity:
         description: "Minimum zizmor severity (informational|low|medium|high)."
         type: string
