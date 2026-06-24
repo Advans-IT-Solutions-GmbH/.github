@@ -1,9 +1,0 @@
-name: ZZ Temp Verify
-on:
-  push:
-    branches: [fix/actionlint-no-docker]
-permissions:
-  contents: read
-jobs:
-  call:
-    uses: ./.github/workflows/reusable-security.yml
