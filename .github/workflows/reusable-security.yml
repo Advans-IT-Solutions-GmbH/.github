@@ -78,10 +78,17 @@ jobs:
             "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
           tar -xzf actionlint.tar.gz actionlint
+          set +e
+          ./actionlint -color -shellcheck="shellcheck -S error"
+          rc=$?
+          set -e
           if [ "$FAIL_ON_FINDINGS" = "true" ]; then
-            ./actionlint -color -shellcheck="shellcheck -S error"
-          else
-            ./actionlint -color -shellcheck="shellcheck -S error" || true
+            exit "$rc"
+          fi
+          # Report-only: tolerate findings (exit code 1) but fail on real errors (>1).
+          if [ "$rc" -gt 1 ]; then
+            echo "actionlint failed with unexpected exit code $rc"
+            exit "$rc"
           fi
       - name: Run zizmor
         env:
