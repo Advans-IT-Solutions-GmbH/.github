@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **organisation-level `.github` repository** for the GitHub org
 `Advans-IT-Solutions-GmbH`. It holds community-health / default files for the
-organisation, not application code. There is no build, test, or lint step.
+organisation, not application code. There is no application build or test
+step; the only CI is a security-scan workflow (Semgrep SAST plus `zizmor` and
+`actionlint` for GitHub Actions auditing) — see `.github/workflows/`.
 
 GitHub treats this special repo as the source of org-wide defaults: files placed
 here (the profile README, SECURITY policy, and other supported community-health
