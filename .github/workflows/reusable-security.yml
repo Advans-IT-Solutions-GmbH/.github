@@ -16,9 +16,9 @@ on:
         type: string
         default: "low"
       gitleaks_fail:
-        description: "Fail the job when gitleaks finds secrets. Default false = report-only (Phase 1)."
+        description: "Fail the job when gitleaks finds a secret in the scanned commits. Default true = blocking."
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
@@ -130,6 +130,12 @@ jobs:
           GITLEAKS_VERSION: "8.30.1"
           GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
           GITLEAKS_FAIL: ${{ inputs.gitleaks_fail }}
+          # Commit-Range für den inkrementellen Scan (nur die neuen Commits des Auslösers).
+          GH_EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
           # Zentrale Baseline-Allowlist: bekanntes History-Rauschen (generierte Test-Logs,
           # Test-Fixtures). Zentral gepflegt — GITLEAKS_CONFIG_TOML hat Vorrang vor einer
           # repo-lokalen .gitleaks.toml, Anpassungen also hier vornehmen. Markdown/Doku wird
@@ -150,10 +156,23 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
-          # Phase 1 = report-only: gitleaks_fail=false -> --exit-code 0 (findet + meldet, bricht nicht ab).
-          # Scharfschalten pro Repo: im aufrufenden security.yml `gitleaks_fail: true` setzen.
+          # Inkrementell: nur die NEUEN Commits des Auslösers scannen — die (auditierte) Historie
+          # wird nicht erneut geprüft, damit Alt-Funde keine unbezogenen PRs blockieren.
+          case "$GH_EVENT" in
+            pull_request) RANGE="$PR_BASE..$PR_HEAD" ;;
+            push)
+              if [ -z "$PUSH_BEFORE" ] || [ "$PUSH_BEFORE" = "0000000000000000000000000000000000000000" ]; then
+                RANGE="-1"
+              else
+                RANGE="$PUSH_BEFORE..$SHA"
+              fi ;;
+            *) RANGE="-1" ;;
+          esac
+          # Blockierend, wenn gitleaks_fail=true (Default): ein neues Secret lässt die CI scheitern.
           if [ "$GITLEAKS_FAIL" = "true" ]; then EC=1; else EC=0; fi
-          ./gitleaks git . --report-format sarif --report-path gitleaks.sarif \
+          echo "Gitleaks scannt Range '$RANGE' (Event $GH_EVENT, exit-code $EC)"
+          ./gitleaks git . --log-opts="$RANGE --no-merges" \
+            --report-format sarif --report-path gitleaks.sarif \
             --redact --no-banner --exit-code "$EC"
       - name: Upload gitleaks SARIF
         if: always()
