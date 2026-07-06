@@ -30,16 +30,20 @@ that does not provide its own copy.
     Other org repos call this via `uses: Advans-IT-Solutions-GmbH/.github/.github/workflows/reusable-security.yml@<ref>`.
   - `security.yml` — runs the reusable workflow for this repo on push / PR to
     `main` and `workflow_dispatch`.
-- `.devcontainer/` — GitHub Codespaces / dev-container config (`devcontainer.json`)
-  plus `setup-git-signing.sh`, which on container start configures the committing
-  identity, GPG commit signing, and `gh` auth. See `.devcontainer/README.md`.
+- `.devcontainer/` — a minimal GitHub Codespaces / dev-container config
+  (`devcontainer.json` only). It intentionally does **not** hardcode a committing
+  identity; each developer configures their own (see below).
 
 ## Conventions observed
 
 - Markdown body language for public-facing files (`profile/README.md`,
-  `SECURITY.md`) is **English**; the `.devcontainer` docs/comments are German.
-- Commit identity used by the devcontainer:
-  `Advans IT Solutions GmbH <89843389+advansit@users.noreply.github.com>`.
+  `SECURITY.md`) is **English**; the `.devcontainer` comments are German.
+- **Commit identity (Model B):** each developer commits under their **own** GitHub
+  account — their personal GitHub no-reply email (typically
+  `<id>+<username>@users.noreply.github.com`) and real name — never a shared
+  `advansit` identity and never an `@advans.ch` address (GitHub may reject the
+  push on email privacy). The authoritative rules live in the private org repo
+  `Advans-IT-Solutions-GmbH/org` → `conventions/git-and-commits.md`.
 - Workflows pin third-party actions by **commit SHA** (with a version comment)
   and pin tool versions (e.g. `semgrep==1.167.0`) with checksum verification
   for downloaded binaries; keep this pattern when editing workflows.
