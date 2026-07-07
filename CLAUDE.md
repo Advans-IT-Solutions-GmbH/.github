@@ -40,7 +40,7 @@ that does not provide its own copy.
   `SECURITY.md`) is **English**; the `.devcontainer` comments are German.
 - **Git / commit / PR conventions:** commit under your **own** GitHub account
   (Model B — use your personal GitHub no-reply address
-  `<id>+<username>@users.noreply.github.com` and your real name; never use an
+  (e.g. `<id>+<username>@users.noreply.github.com`) and your real name; never use an
   `@advans.ch` email address, i.e. any address in that domain, as the commit
   email). The full Git/branch/commit/PR conventions **and** the Copilot
   code-review Definition of Done live in `AGENTS.md` — that file is authoritative

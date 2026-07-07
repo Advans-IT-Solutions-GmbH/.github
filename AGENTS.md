@@ -21,7 +21,7 @@ and repeat until nothing new comes back.
 
 - **No skill/instruction drift.** `AGENTS.md`, `CLAUDE.md` and the org SSOT
   (`Advans-IT-Solutions-GmbH/org` → `README.md`) must stay consistent and carry only
-  the minimum — short conventions plus pointers, never duplicated rules. Keeping them
+  the minimum: short summaries plus pointers, never a duplicated full ruleset. Keeping them
   drift-free is the developer's (and agent's) responsibility, and every Copilot review
   must additionally verify that the PR introduces no drift between these instruction files.
 
