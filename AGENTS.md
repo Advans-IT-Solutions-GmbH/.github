@@ -19,6 +19,12 @@ GraphQL `resolveReviewThread` mutation, re-request Copilot
 `-f 'reviewers[]=copilot-pull-request-reviewer[bot]'`),
 and repeat until nothing new comes back.
 
+- **No skill/instruction drift.** `AGENTS.md`, `CLAUDE.md` and the org SSOT
+  (`Advans-IT-Solutions-GmbH/org` → `README.md`) must stay consistent and carry only
+  the minimum — short conventions plus pointers, never duplicated rules. Keeping them
+  drift-free is the developer's (and agent's) responsibility, and every Copilot review
+  must additionally verify that the PR introduces no drift between these instruction files.
+
 Repo-specific: this **public** repo holds the org profile/community-health files and provides
 the reusable `reusable-security.yml` workflow used by every org repo — changes here affect all
 repos. No internal details or secrets belong here. Further notes: `CLAUDE.md`.
