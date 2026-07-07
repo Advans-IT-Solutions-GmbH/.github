@@ -43,7 +43,7 @@ that does not provide its own copy.
   `<id>+<username>@users.noreply.github.com`) and real name — never a shared
   `advansit` identity and never an `@advans.ch` address (GitHub may reject the
   push on email privacy). The authoritative rules live in the private org repo
-  `Advans-IT-Solutions-GmbH/org` → `conventions/git-and-commits.md`.
+  `Advans-IT-Solutions-GmbH/org` → `README.md`, section "Git and Commit Conventions".
 - Workflows pin third-party actions by **commit SHA** (with a version comment)
   and pin tool versions (e.g. `semgrep==1.167.0`) with checksum verification
   for downloaded binaries; keep this pattern when editing workflows.
