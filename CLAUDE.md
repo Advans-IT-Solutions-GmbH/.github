@@ -39,7 +39,7 @@ that does not provide its own copy.
 - Markdown body language for public-facing files (`profile/README.md`,
   `SECURITY.md`) is **English**; the `.devcontainer` comments are German.
 - **Git / commit / PR conventions:** commit under your **own** GitHub account
-  (Model B — use its personal GitHub no-reply address
+  (Model B — use your personal GitHub no-reply address
   `<id>+<username>@users.noreply.github.com` and your real name; never use an
   `@advans.ch` email address, i.e. any address in that domain, as the commit
   email). The full Git/branch/commit/PR conventions **and** the Copilot
