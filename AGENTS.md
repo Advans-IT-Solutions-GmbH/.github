@@ -21,9 +21,10 @@ and repeat until nothing new comes back.
 
 - **No skill/instruction drift.** `AGENTS.md`, `CLAUDE.md` and the org SSOT
   (`Advans-IT-Solutions-GmbH/org` → `README.md`) must stay consistent and carry only
-  the minimum: short summaries plus pointers, never a duplicated full ruleset. Keeping them
-  drift-free is the developer's (and agent's) responsibility, and every Copilot review
-  must additionally verify that the PR introduces no drift between these instruction files.
+  the minimum (short summaries plus pointers, no duplicated full ruleset). Every
+  AI/agent and developer keeps these files drift-free while working — proactively, so
+  drift never reaches review in the first place. Code review (including Copilot)
+  additionally checks for drift as a backstop.
 
 Repo-specific: this **public** repo holds the org profile/community-health files and provides
 the reusable `reusable-security.yml` workflow used by every org repo — changes here affect all
