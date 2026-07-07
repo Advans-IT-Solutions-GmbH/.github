@@ -12,10 +12,11 @@ without access.
 **done** once every review comment has been addressed (commit and push a fix, or reject it
 with a reasoned reply if the suggestion isn't sensible), all review threads are resolved, and
 a re-requested Copilot round finds nothing new. This applies to developers and agents alike.
-The loop: fetch the review and its threads (`gh api .../reviews` and the GraphQL
+The loop: fetch the review and its threads (`gh api repos/{owner}/{repo}/pulls/{number}/reviews` and the GraphQL
 `reviewThreads` field), handle every open thread, push fixes, resolve each thread via the
 GraphQL `resolveReviewThread` mutation, re-request Copilot
-(`gh api --method POST .../requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'`),
+(`gh api --method POST repos/{owner}/{repo}/pulls/{number}/requested_reviewers`,
+`-f 'reviewers[]=copilot-pull-request-reviewer[bot]'`),
 and repeat until nothing new comes back.
 
 Repo-specific: this **public** repo holds the org profile/community-health files and provides
