@@ -1,7 +1,7 @@
 {
 	// Minimaler Dev-Container (öffentliches Repo → kein claude-code / Anthropic-Key).
 	// Commit-Identität und Signing regeln die org-Konventionen:
-	// Advans-IT-Solutions-GmbH/org → conventions/git-and-commits.md (privates Repo).
+	// Advans-IT-Solutions-GmbH/org → README.md, Abschnitt „Git and Commit Conventions“ (privates Repo).
 	"name": ".github dev",
 	"image": "mcr.microsoft.com/devcontainers/universal:4.0.1-noble"
 }
