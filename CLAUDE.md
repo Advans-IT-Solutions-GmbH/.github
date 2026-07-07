@@ -45,7 +45,7 @@ that does not provide its own copy.
   email). The full Git/branch/commit/PR conventions **and** the Copilot
   code-review Definition of Done live in `AGENTS.md` — that file is authoritative
   here, so the full rules and the DoD are **not** restated here; only this
-  one-line identity summary is kept as a convenience pointer. (The org-wide SSOT
+  short identity summary is kept as a convenience pointer. (The org-wide SSOT
   is the private repo `Advans-IT-Solutions-GmbH/org` → `README.md`, section "Git and
   Commit Conventions".)
 - Workflows pin third-party actions by **commit SHA** (with a version comment)
