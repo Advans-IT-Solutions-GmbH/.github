@@ -44,8 +44,9 @@ that does not provide its own copy.
   `@advans.ch` email address, i.e. any address in that domain, as the commit
   email). The full Git/branch/commit/PR conventions **and** the Copilot
   code-review Definition of Done live in `AGENTS.md` — that file is authoritative
-  here, so they are **not** duplicated in this file. (The org-wide SSOT is the
-  private repo `Advans-IT-Solutions-GmbH/org` → `README.md`, section "Git and
+  here, so the full rules and the DoD are **not** restated here; only this
+  one-line identity summary is kept as a convenience pointer. (The org-wide SSOT
+  is the private repo `Advans-IT-Solutions-GmbH/org` → `README.md`, section "Git and
   Commit Conventions".)
 - Workflows pin third-party actions by **commit SHA** (with a version comment)
   and pin tool versions (e.g. `semgrep==1.167.0`) with checksum verification
