@@ -38,12 +38,16 @@ that does not provide its own copy.
 
 - Markdown body language for public-facing files (`profile/README.md`,
   `SECURITY.md`) is **English**; the `.devcontainer` comments are German.
-- **Commit identity (Model B):** each developer commits under their **own** GitHub
-  account — their personal GitHub no-reply email (typically
-  `<id>+<username>@users.noreply.github.com`) and real name — never a shared
-  `advansit` identity and never an `@advans.ch` address (GitHub may reject the
-  push on email privacy). The authoritative rules live in the private org repo
-  `Advans-IT-Solutions-GmbH/org` → `README.md`, section "Git and Commit Conventions".
+- **Git / commit / PR conventions:** commit under your **own** GitHub account
+  (Model B — use your personal GitHub no-reply address
+  (e.g. `<id>+<username>@users.noreply.github.com`) and your real name; never use an
+  `@advans.ch` email address, i.e. any address in that domain, as the commit
+  email). The full Git/branch/commit/PR conventions **and** the Copilot
+  code-review Definition of Done live in `AGENTS.md` — that file is authoritative
+  here, so the full rules and the DoD are **not** restated here; only this
+  short identity summary is kept as a convenience pointer. (The org-wide SSOT
+  is the private repo `Advans-IT-Solutions-GmbH/org` → `README.md`, section "Git and
+  Commit Conventions".)
 - Workflows pin third-party actions by **commit SHA** (with a version comment)
   and pin tool versions (e.g. `semgrep==1.167.0`) with checksum verification
   for downloaded binaries; keep this pattern when editing workflows.
