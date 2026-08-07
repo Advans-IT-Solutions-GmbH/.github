@@ -10,8 +10,9 @@ without access.
 
 **Definition of Done — Copilot code review:** a PR with Copilot code review is only
 **done** once every review comment has been addressed (commit and push a fix, or reject it
-with a reasoned reply if the suggestion isn't sensible), all review threads are resolved, and
-a re-requested Copilot round finds nothing new. This applies to developers and agents alike.
+with a reasoned reply if the suggestion isn't sensible) — including the collapsed "Suppressed
+comments" block in the review body, not only the inline review threads — all review threads are
+resolved, and a re-requested Copilot round finds nothing new. This applies to developers and agents alike.
 The loop: fetch the review and its threads (`gh api repos/{owner}/{repo}/pulls/{number}/reviews` and the GraphQL
 `reviewThreads` field), handle every open thread, push fixes, resolve each thread via the
 GraphQL `resolveReviewThread` mutation, re-request Copilot
