@@ -58,7 +58,10 @@ jobs:
         with:
           name: semgrep-sarif
           path: semgrep.sarif
-          retention-days: 14
+          # Diagnose fuer einen roten Lauf, kein Zwischenergebnis. Drei Tage ist die Obergrenze
+          # der Organisation (org-Handbuch, Abschnitt "Artifact Retention") und reicht ueber ein
+          # Wochenende. Diese Ablaufdatei laeuft in jedem Repository, 14 Tage summierten sich.
+          retention-days: 3
           if-no-files-found: ignore
 
   actions-audit:
@@ -180,5 +183,6 @@ jobs:
         with:
           name: gitleaks-sarif
           path: gitleaks.sarif
-          retention-days: 14
+          # Gleiche Begruendung wie beim Semgrep-Bericht darueber.
+          retention-days: 3
           if-no-files-found: ignore
