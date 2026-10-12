@@ -18,11 +18,11 @@ developers and agents alike. The loop: fetch the review and its threads
 collapsed `Suppressed comments (N)` block, which does **not** appear as a `reviewThread` — and the
 GraphQL `reviewThreads` field), handle every open thread **and** every suppressed comment, push
 fixes, resolve each thread via the
-GraphQL `resolveReviewThread` mutation, re-request Copilot through GraphQL (first clear the
-request with `requestReviews(input:{pullRequestId, botIds:[], union:false})`, then set it again
-with `requestReviews(input:{pullRequestId, botIds:["BOT_kgDOCnlnWA"], union:true})`; the REST call
-`POST …/requested_reviewers` returns success but starts no new round), and repeat until nothing
-new comes back.
+GraphQL `resolveReviewThread` mutation, re-request Copilot with the GraphQL mutation
+`rerequestReviews(input:{pullRequestId, botIds:["BOT_kgDOCnlnWA"]})` (it leaves every other
+requested reviewer untouched; the REST call `POST …/requested_reviewers` returns success but
+starts no new round; the very first request uses `requestReviews` with `union:true`), and repeat
+until nothing new comes back.
 
 **A merge recommendation is mandatory:** the latest Copilot overview on the current head commit
 must read "🟢 Approval recommended". "🔵 Needs a closer look" or "🟡 Changes recommended" is never
