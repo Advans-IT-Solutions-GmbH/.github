@@ -18,10 +18,16 @@ developers and agents alike. The loop: fetch the review and its threads
 collapsed `Suppressed comments (N)` block, which does **not** appear as a `reviewThread` — and the
 GraphQL `reviewThreads` field), handle every open thread **and** every suppressed comment, push
 fixes, resolve each thread via the
-GraphQL `resolveReviewThread` mutation, re-request Copilot
-(`gh api --method POST repos/{owner}/{repo}/pulls/{number}/requested_reviewers`,
-`-f 'reviewers[]=copilot-pull-request-reviewer[bot]'`),
-and repeat until nothing new comes back.
+GraphQL `resolveReviewThread` mutation, re-request Copilot with the GraphQL mutation
+`rerequestReviews(input:{pullRequestId, botIds:["BOT_kgDOCnlnWA"]})` (it leaves every other
+requested reviewer untouched; the REST call `POST …/requested_reviewers` returns success but
+starts no new round; the very first request uses `requestReviews` with `union:true`), and repeat
+until nothing new comes back.
+
+**A merge recommendation is mandatory:** the latest Copilot overview on the current head commit
+must read "🟢 Approval recommended". "🔵 Needs a closer look" or "🟡 Changes recommended" is never
+done, not even with 0 findings, no "Previously missed" and green CI: fix the reason the overview
+names and re-request Copilot until it says 🟢.
 
 - **No skill/instruction drift.** `AGENTS.md`, `CLAUDE.md` and the org SSOT
   (`Advans-IT-Solutions-GmbH/org` → `README.md`) must stay consistent and carry only
