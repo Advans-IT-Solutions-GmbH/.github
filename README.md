@@ -22,8 +22,10 @@ repositories must explicitly call the workflow to run these checks.
 
 ## Calling the workflow
 
-Pin the reusable workflow to a reviewed **full commit SHA**, not a mutable branch
-or tag. For example, save this as `.github/workflows/security.yml` in a caller:
+Pin the reusable workflow to a reachable, reviewed **full merge commit SHA**, not
+a mutable branch or tag. Pre-squash feature commits can become uncallable after
+their branch is deleted. For example, save this as
+`.github/workflows/security.yml` in a caller:
 
 ```yaml
 name: Security Scan
@@ -39,7 +41,7 @@ permissions:
 
 jobs:
   security:
-    uses: Advans-IT-Solutions-GmbH/.github/.github/workflows/reusable-security.yml@fc2542e862def044ea16d81340624c1d69e9bdbb
+    uses: Advans-IT-Solutions-GmbH/.github/.github/workflows/reusable-security.yml@5a49bce76e1f4537ad23c1d1de3c87193b117892
     with:
       fail_on_findings: false
       gitleaks_fail: true
