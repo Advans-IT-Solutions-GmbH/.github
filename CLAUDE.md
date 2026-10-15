@@ -7,8 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is the **organisation-level `.github` repository** for the GitHub org
 `Advans-IT-Solutions-GmbH`. It holds community-health / default files for the
 organisation, not application code. There is no application build or test
-step; the only CI is a security-scan workflow (Semgrep SAST plus `zizmor` and
-`actionlint` for GitHub Actions auditing) — see `.github/workflows/`.
+step; CI runs workflow regression tests and security scans (Semgrep SAST,
+`zizmor` and `actionlint` for GitHub Actions, and Gitleaks for secrets).
+See `README.md` for the reusable workflow's contract and limitations.
 
 GitHub treats this special repo as the source of org-wide defaults: files placed
 here (the profile README, SECURITY policy, and other supported community-health
@@ -23,13 +24,14 @@ that does not provide its own copy.
 - `SECURITY.md` — the **org-wide security policy** (vulnerability reporting via
   GitHub Private Vulnerability Reporting or `info@advans.ch` with subject
   `SECURITY`). Inherited by repos without their own `SECURITY.md`.
-- `README.md` — repository README (currently empty).
+- `README.md` — public repository map, reusable workflow usage and maintenance.
 - `.github/workflows/` — reusable CI:
   - `reusable-security.yml` — a `workflow_call` reusable security scan
-    (Semgrep SAST, plus `zizmor` + `actionlint` for GitHub Actions auditing).
+    (Semgrep SAST, `zizmor` + `actionlint` for GitHub Actions auditing, and Gitleaks).
     Other org repos call this via `uses: Advans-IT-Solutions-GmbH/.github/.github/workflows/reusable-security.yml@<ref>`.
-  - `security.yml` — runs the reusable workflow for this repo on push / PR to
-    `main` and `workflow_dispatch`.
+  - `security.yml` — runs regression tests and the reusable workflow for this repo
+    on push / PR to `main` and `workflow_dispatch`.
+- `tests/` — standard-library Python tests of the workflow's Bash execution contract.
 - `.devcontainer/` — a minimal GitHub Codespaces / dev-container config
   (`devcontainer.json` only). It intentionally does **not** hardcode a committing
   identity; each developer configures their own (see below).

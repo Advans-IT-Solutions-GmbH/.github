@@ -8,7 +8,7 @@ on:
         type: string
         default: "p/security-audit p/secrets p/github-actions p/javascript p/php p/python"
       fail_on_findings:
-        description: "Fail the job when issues are found."
+        description: "Fail on Semgrep, actionlint and zizmor findings; tool errors always fail."
         type: boolean
         default: true
       zizmor_min_severity:
@@ -27,6 +27,7 @@ jobs:
   semgrep:
     name: Semgrep (SAST)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -67,10 +68,12 @@ jobs:
   actions-audit:
     name: Actions Security (zizmor + actionlint)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
       - name: Checkout
+        id: checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
@@ -98,6 +101,8 @@ jobs:
             exit "$rc"
           fi
       - name: Run zizmor
+        # Audit even after actionlint findings, download failures or tool errors.
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         env:
           ZIZMOR_MIN_SEVERITY: ${{ inputs.zizmor_min_severity }}
           FAIL_ON_FINDINGS: ${{ inputs.fail_on_findings }}
@@ -106,20 +111,20 @@ jobs:
           set -euo pipefail
           python3 -m pip install --user --quiet zizmor==1.26.1
           export PATH="$HOME/.local/bin:$PATH"
-          config_arg=""
+          args=(--strict-collection --min-severity "$ZIZMOR_MIN_SEVERITY")
           if [ -f .github/zizmor.yml ]; then
-            config_arg="--config .github/zizmor.yml"
+            args+=(--config .github/zizmor.yml)
           fi
-          # shellcheck disable=SC2086
-          if [ "$FAIL_ON_FINDINGS" = "true" ]; then
-            zizmor $config_arg --min-severity "$ZIZMOR_MIN_SEVERITY" .github/workflows
-          else
-            zizmor $config_arg --min-severity "$ZIZMOR_MIN_SEVERITY" .github/workflows || true
+          if [ "$FAIL_ON_FINDINGS" != "true" ]; then
+            # Suppress finding exits (11-14), never audit/argument/collection errors (1-3).
+            args+=(--no-exit-codes)
           fi
+          zizmor "${args[@]}" .github/workflows
 
   gitleaks:
     name: Gitleaks (secret scan)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
