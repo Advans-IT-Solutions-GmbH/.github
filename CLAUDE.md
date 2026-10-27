@@ -20,7 +20,10 @@ that does not provide its own copy.
 
 - `profile/README.md` — the **organisation profile README** rendered on the
   org's public GitHub landing page (https://github.com/Advans-IT-Solutions-GmbH).
-  Company description, services, and contact details. English.
+  Company description, services, label overview, and contact details. English.
+- `.github/assets/labels/` — the swiss made software label logos the profile
+  shows: unchanged originals, plus copies with a white margin for the dark
+  theme. The profile loads them by absolute URL from `main`.
 - `SECURITY.md` — the **org-wide security policy** (vulnerability reporting via
   GitHub Private Vulnerability Reporting or `info@advans.ch` with subject
   `SECURITY`). Inherited by repos without their own `SECURITY.md`.
