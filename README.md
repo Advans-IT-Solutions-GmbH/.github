@@ -10,6 +10,7 @@ GitHub Actions security workflow. It contains no application.
 | Path | Purpose |
 | --- | --- |
 | `profile/README.md` | Public organisation profile. |
+| `.github/assets/labels/` | Label logos of swiss made software shown in the profile: unchanged originals, plus copies with a white margin for the dark theme. |
 | `SECURITY.md` | Vulnerability reporting policy, inherited by repositories without their own policy. |
 | `.github/workflows/reusable-security.yml` | Semgrep SAST, actionlint, zizmor and Gitleaks, exposed through `workflow_call`. |
 | `.github/workflows/security.yml` | This repository's scans and regression tests on PRs/pushes to `main` and manual dispatch. |
