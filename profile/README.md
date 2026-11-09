@@ -31,10 +31,7 @@ We are a member of swiss made software. The labels apply per offering:
   <tr>
     <td>
       <a href="https://www.swissmadesoftware.org/en/about/swiss-made-software.html">
-        <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sms-logo-1v-300dpi-rgb-on-white.png">
-          <img src="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sms-logo-1v-300dpi-rgb.png" width="110" alt="swiss made software">
-        </picture>
+        <img src="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sms-logo-1v-300dpi-rgb.png" width="110" alt="swiss made software">
       </a>
     </td>
     <td>SwissQRCode, our Joomla and J2Commerce extensions and the meet software carry swiss made software.</td>
@@ -42,10 +39,7 @@ We are a member of swiss made software. The labels apply per offering:
   <tr>
     <td>
       <a href="https://www.swissmadesoftware.org/en/about/swiss-hosting.html">
-        <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sh-logo-1v-300dpi-rgb-on-white.png">
-          <img src="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sh-logo-1v-300dpi-rgb.png" width="124" alt="swiss hosting">
-        </picture>
+        <img src="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sh-logo-1v-300dpi-rgb.png" width="124" alt="swiss hosting">
       </a>
     </td>
     <td>The operation of meet.advans.ch, our video conferencing service, carries swiss hosting.</td>
@@ -53,10 +47,7 @@ We are a member of swiss made software. The labels apply per offering:
   <tr>
     <td>
       <a href="https://www.swissmadesoftware.org/en/about/swiss-digital-services.html">
-        <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sds-logo-v-150dpi-rgb-on-white.png">
-          <img src="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sds-logo-v-150dpi-rgb.png" width="170" alt="swiss digital services">
-        </picture>
+        <img src="https://raw.githubusercontent.com/Advans-IT-Solutions-GmbH/.github/main/.github/assets/labels/sds-logo-v-150dpi-rgb.png" width="170" alt="swiss digital services">
       </a>
     </td>
     <td>Our IT services carry swiss digital services.</td>
