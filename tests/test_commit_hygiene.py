@@ -81,6 +81,8 @@ class CommitHygieneTests(unittest.TestCase):
             "fix(ci): address Copilot review findings in copilot-instructions.md",
             "fix(ci): files generated with build.sh are no longer committed",
             "docs: explain why Co-authored-by trailers are rejected",
+            "follow-up: address Copilot review findings",
+            "follow-up: address Copilot review findings\n\nBody paragraph.\n\nCopilot suggested this change, see the thread.",
             "fix: note: Copilot review addressed",
             "fix(ci): Fixes: Copilot finding",
             "fix(scope): rename the agent class\n\nBody text mentions Ona only as a place name.",

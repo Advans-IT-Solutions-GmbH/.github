@@ -50,14 +50,14 @@ jobs:
           AGENT = r"(?:claude|copilot|chatgpt|openai|codex|cursor|gemini|anthropic|devin|aider|windsurf|ona)"
           # The agent as it appears in a signature: short name or full product name.
           AGENT_NAME = rf"(?:github[ -])?{AGENT}(?:[ -]code)?"
-          # Any trailer-like key (letters, with at least one hyphen: "AI-assisted-by", "Signed-off-by").
-          TRAILER_KEY = r"[A-Za-z]+(?:-[A-Za-z]+)+"
+          # A trailer line: "Key: value", the key being one or more words (also "Tool: Codex").
+          TRAILER_LINE = re.compile(r"^[A-Za-z][\w-]*\s*:\s*\S")
+          TRAILER_CONTINUATION = re.compile(r"^\s+\S")
 
           # (reason, regular expression) applied to every single line of the message, case-insensitive.
           LINE_PATTERNS = [
               ("Co-authored-by trailer", re.compile(r"^\s*co-authored-by\s*:", re.I)),
               ("'Generated with/by' signature", re.compile(r"^\s*(?:[^\w\s]+\s*)?generated\s+(?:with|by)\b", re.I)),
-              ("agent name in a trailer", re.compile(rf"^\s*{TRAILER_KEY}\s*:.*\b{AGENT}\b", re.I)),
               (
                   "agent name as a signature line",
                   re.compile(rf"^\s*(?:[-–—~_*]{{1,3}}\s*)?{AGENT_NAME}(?:\s+(?:sonnet|opus|haiku)[\w .-]*)?\s*$", re.I),
@@ -91,6 +91,18 @@ jobs:
                   commits.extend(page)
 
 
+          def trailer_block(message):
+              """The final paragraph when it consists of trailer lines only (git's rule), else nothing.
+              The first paragraph is the subject and never a trailer block."""
+              paragraphs = [p for p in re.split(r"\n\s*\n", message.strip("\n")) if p.strip()]
+              if len(paragraphs) < 2:
+                  return []
+              lines = paragraphs[-1].splitlines()
+              if all(TRAILER_LINE.match(line) or TRAILER_CONTINUATION.match(line) for line in lines):
+                  return [line for line in lines if TRAILER_LINE.match(line)]
+              return []
+
+
           def problems(item):
               commit = item.get("commit") or {}
               found = []
@@ -101,6 +113,8 @@ jobs:
               for reason, pattern in LINE_PATTERNS:
                   if any(pattern.search(line) for line in message.splitlines()):
                       found.append(reason)
+              if any(re.search(rf"\b{AGENT}\b", line, re.I) for line in trailer_block(message)):
+                  found.append("agent name in a trailer")
               for reason, pattern in TEXT_PATTERNS:
                   if pattern.search(message):
                       found.append(reason)
