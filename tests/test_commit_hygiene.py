@@ -81,6 +81,8 @@ class CommitHygieneTests(unittest.TestCase):
             "fix(ci): address Copilot review findings in copilot-instructions.md",
             "fix(ci): files generated with build.sh are no longer committed",
             "docs: explain why Co-authored-by trailers are rejected",
+            "fix: note: Copilot review addressed",
+            "fix(ci): Fixes: Copilot finding",
             "fix(scope): rename the agent class\n\nBody text mentions Ona only as a place name.",
         ):
             with self.subTest(message=message):
@@ -118,6 +120,10 @@ class CommitHygieneTests(unittest.TestCase):
             ("fix(ci): x\n\nSigned-off-by: Claude Sonnet 5.5", "agent name in a trailer"),
             ("fix(ci): x\n\n-- Claude", "agent name as a signature line"),
             ("fix(ci): x\n\nCopilot", "agent name as a signature line"),
+            ("fix(ci): x\n\n-- Claude Code", "agent name as a signature line"),
+            ("fix(ci): x\n\n-- GitHub Copilot", "agent name as a signature line"),
+            ("fix(ci): x\n\nAI-assisted-by: Copilot", "agent name in a trailer"),
+            ("fix(ci): x\n\nTool-used: Codex", "agent name in a trailer"),
             ("fix(ci): x\n\nmail noreply@anthropic.com", "agent e-mail address"),
         ):
             with self.subTest(message=message):
@@ -127,6 +133,10 @@ class CommitHygieneTests(unittest.TestCase):
         self.assertFails("author is an agent identity", commit(author="Copilot"))
         self.assertFails("committer is an agent identity", commit(committer="copilot-swe-agent[bot]"))
         self.assertFails("author is an agent identity", commit(email="198982749+Copilot@users.noreply.github.com"))
+        self.assertFails("author is an agent identity", commit(author="Codex"))
+        self.assertFails("author is an agent identity", commit(author="GitHub Copilot"))
+        self.assertFails("author is an agent identity",
+                         commit(email="123+copilot-swe-agent[bot]@users.noreply.github.com"))
 
     def test_all_offending_shas_are_listed_and_clean_ones_are_not(self):
         output = self.assertFails(
