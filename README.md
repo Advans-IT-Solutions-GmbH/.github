@@ -54,6 +54,22 @@ This repository's own caller omits these overrides, so both defaults are blockin
 Keep the caller's existing trigger and concurrency policy when adopting/upgrading;
 the reusable workflow does not impose a concurrency group.
 
+## Commit hygiene
+
+A caller wires the reusable job into the gate it already requires (Collect Results or Test Summary) and lists it in that gate's 
+eeds:
+
+```yaml
+  commit-hygiene:
+    name: Commit hygiene
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: Advans-IT-Solutions-GmbH/.github/.github/workflows/reusable-commit-hygiene.yml@<full merge commit SHA>
+```
+
+The job reads the pull request's commits through the API and lists every offending SHA. It succeeds without checking on events other than `pull_request`.
+
 ### Inputs and permissions
 
 All inputs are optional:

@@ -1,0 +1,170 @@
+"""Run the commit hygiene script of the reusable workflow against fixture commits.
+
+Only Python's standard library is required. The Python program is read out of the
+workflow file, so the test covers exactly what the job runs.
+"""
+
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import textwrap
+import unittest
+
+
+WORKFLOW = (
+    Path(__file__).resolve().parents[1]
+    / ".github"
+    / "workflows"
+    / "reusable-commit-hygiene.yml"
+).read_text(encoding="utf-8")
+
+
+def script():
+    match = re.search(r"python3 - commits\.json <<'PY'\n(.*?)\n          PY\n", WORKFLOW, re.DOTALL)
+    if match is None:
+        raise AssertionError("Missing python block in the workflow")
+    return textwrap.dedent(match.group(1))
+
+
+def commit(message="fix(ci): change", verified=True, author="Advans IT Solutions GmbH",
+           committer="Advans IT Solutions GmbH", email="89843389+advansit@users.noreply.github.com",
+           sha="a" * 40):
+    return {
+        "sha": sha,
+        "commit": {
+            "message": message,
+            "author": {"name": author, "email": email},
+            "committer": {"name": committer, "email": email},
+            "verification": {"verified": verified, "reason": "valid" if verified else "unsigned"},
+        },
+    }
+
+
+class CommitHygieneTests(unittest.TestCase):
+    def run_script(self, pages):
+        """pages: list of commit lists, written like `gh api --paginate` writes them."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "commits.json"
+            path.write_text("".join(json.dumps(page) for page in pages), encoding="utf-8")
+            program = Path(directory) / "check.py"
+            program.write_text(script(), encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, "-I", str(program), str(path)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        return result.returncode, result.stdout + result.stderr
+
+    def assertPasses(self, *commits):
+        code, output = self.run_script([list(commits)])
+        self.assertEqual(code, 0, output)
+
+    def assertFails(self, expected, *commits):
+        code, output = self.run_script([list(commits)])
+        self.assertEqual(code, 1, output)
+        self.assertIn(expected, output)
+        return output
+
+    # Negative cases: these must pass.
+    def test_clean_verified_commit_passes(self):
+        self.assertPasses(commit())
+
+    def test_github_update_branch_merge_commit_passes(self):
+        self.assertPasses(commit("Merge branch 'main' into fix/ci-commit-hygiene", author="GitHub", committer="GitHub",
+                                 email="noreply@github.com"))
+
+    def test_words_in_ordinary_text_pass(self):
+        for message in (
+            "docs: update .claude/skills and the Claude Code settings",
+            "fix(ci): address Copilot review findings in copilot-instructions.md",
+            "fix(ci): files generated with build.sh are no longer committed",
+            "docs: explain why Co-authored-by trailers are rejected",
+            "follow-up: address Copilot review findings",
+            "follow-up: address Copilot review findings\n\nBody paragraph.\n\nCopilot suggested this change, see the thread.",
+            "fix: note: Copilot review addressed",
+            "fix(ci): Fixes: Copilot finding",
+            "fix(scope): rename the agent class\n\nBody text mentions Ona only as a place name.",
+        ):
+            with self.subTest(message=message):
+                self.assertPasses(commit(message))
+
+    def test_pages_are_concatenated(self):
+        code, output = self.run_script([[commit(sha="1" * 40)], [commit(sha="2" * 40)]])
+        self.assertEqual(code, 0, output)
+        self.assertIn("Checked 2 commit(s).", output)
+
+    # Positive cases: each one must fail and name the commit.
+    def test_unverified_commit_fails_and_lists_sha(self):
+        output = self.assertFails("not verified (unsigned)", commit(verified=False, sha="b" * 40))
+        self.assertIn("b" * 40, output)
+
+    def test_missing_verification_data_fails(self):
+        item = commit()
+        del item["commit"]["verification"]
+        self.assertFails("not verified", item)
+
+    def test_co_authored_by_fails_in_any_case(self):
+        for trailer in ("Co-authored-by: Someone <a@b.c>", "Co-Authored-By: Claude <noreply@anthropic.com>",
+                        "co-authored-by:x", "  CO-AUTHORED-BY : x"):
+            with self.subTest(trailer=trailer):
+                self.assertFails("Co-authored-by trailer", commit("fix(ci): x\n\nBody\n\n" + trailer))
+
+    def test_agent_signatures_fail(self):
+        for message, reason in (
+            ("fix(ci): x\n\n\U0001F916 Generated with [Claude Code](https://claude.com/claude-code)", "robot emoji"),
+            ("fix(ci): x \U0001F916", "robot emoji"),
+            ("fix(ci): x\n\nGenerated with Copilot", "'Generated with/by' signature"),
+            ("fix(ci): x\n\nGenerated by an agent", "'Generated with/by' signature"),
+            ("fix(ci): x\n\nSigned-off-by: copilot-swe-agent[bot]", "copilot-swe-agent"),
+            ("fix(ci): x\n\nAssisted-by: Claude", "agent name in a trailer"),
+            ("fix(ci): x\n\nSigned-off-by: Claude Sonnet 5.5", "agent name in a trailer"),
+            ("fix(ci): x\n\n-- Claude", "agent name as a signature line"),
+            ("fix(ci): x\n\nCopilot", "agent name as a signature line"),
+            ("fix(ci): x\n\n-- Claude Code", "agent name as a signature line"),
+            ("fix(ci): x\n\n-- GitHub Copilot", "agent name as a signature line"),
+            ("fix(ci): x\n\nAI-assisted-by: Copilot", "agent name in a trailer"),
+            ("fix(ci): x\n\nTool-used: Codex", "agent name in a trailer"),
+            ("fix(ci): x\n\nmail noreply@anthropic.com", "agent e-mail address"),
+        ):
+            with self.subTest(message=message):
+                self.assertFails(reason, commit(message))
+
+    def test_agent_identity_fails(self):
+        self.assertFails("author is an agent identity", commit(author="Copilot"))
+        self.assertFails("committer is an agent identity", commit(committer="copilot-swe-agent[bot]"))
+        self.assertFails("author is an agent identity", commit(email="198982749+Copilot@users.noreply.github.com"))
+        self.assertFails("author is an agent identity", commit(author="Codex"))
+        self.assertFails("author is an agent identity", commit(author="GitHub Copilot"))
+        self.assertFails("author is an agent identity",
+                         commit(email="123+copilot-swe-agent[bot]@users.noreply.github.com"))
+
+    def test_all_offending_shas_are_listed_and_clean_ones_are_not(self):
+        output = self.assertFails(
+            "1" * 40,
+            commit(sha="1" * 40, verified=False),
+            commit(sha="2" * 40),
+            commit("fix: x\n\nCo-authored-by: A <a@b.c>", sha="3" * 40),
+        )
+        self.assertIn("3" * 40, output)
+        self.assertNotIn("2" * 40, output)
+
+    def test_empty_list_fails_closed(self):
+        code, output = self.run_script([[]])
+        self.assertEqual(code, 1, output)
+        self.assertIn("Failing closed", output)
+
+    def test_truncated_api_list_fails_closed(self):
+        code, output = self.run_script([[commit(sha=str(i)) for i in range(250)]])
+        self.assertEqual(code, 1, output)
+        self.assertIn("Failing closed", output)
+
+    def test_workflow_skips_other_events_and_needs_no_write_permission(self):
+        self.assertIn('if [ "$EVENT_NAME" != "pull_request" ]', WORKFLOW)
+        self.assertIn("pull-requests: read", WORKFLOW)
+        self.assertNotRegex(WORKFLOW, r"(?m)^\s+\w[\w-]*: write\b")
+
+
+if __name__ == "__main__":
+    unittest.main()

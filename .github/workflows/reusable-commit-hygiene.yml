@@ -1,0 +1,154 @@
+name: Reusable Commit Hygiene
+
+# Owner decision of 2026-11-23: a pull request with an unverified commit, a Co-authored-by
+# trailer or an agent signature in any commit message must not be mergeable.
+#
+# The job reads the commits of the pull request through the GitHub API (no checkout, no third-party
+# action) and fails with the list of offending SHAs. GitHub's own "Update branch" merge commits are
+# verified and carry no signature text, so they pass without a special case.
+#
+# Callers wire the job "Commit hygiene" into the gate they already require ("Collect Results" or
+# "Test Summary"). On events other than pull_request the job succeeds without checking anything,
+# so a caller can keep it in a `needs` list that also runs on push.
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  commit-hygiene:
+    name: Commit hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check the commits of the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "Not a pull request event ($EVENT_NAME): nothing to check."
+            exit 0
+          fi
+          : "${PR_NUMBER:?PR_NUMBER is required}"
+          gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/commits?per_page=100" > commits.json
+          python3 - commits.json <<'PY'
+          import json
+          import re
+          import sys
+
+          # The commits endpoint returns at most 250 commits. More than that cannot be judged completely.
+          API_COMMIT_LIMIT = 250
+
+          AGENT = r"(?:claude|copilot|chatgpt|openai|codex|cursor|gemini|anthropic|devin|aider|windsurf|ona)"
+          # The agent as it appears in a signature: short name or full product name.
+          AGENT_NAME = rf"(?:github[ -])?{AGENT}(?:[ -]code)?"
+          # A trailer line: "Key: value", the key being one or more words (also "Tool: Codex").
+          TRAILER_LINE = re.compile(r"^[A-Za-z][\w-]*\s*:\s*\S")
+          TRAILER_CONTINUATION = re.compile(r"^\s+\S")
+
+          # (reason, regular expression) applied to every single line of the message, case-insensitive.
+          LINE_PATTERNS = [
+              ("Co-authored-by trailer", re.compile(r"^\s*co-authored-by\s*:", re.I)),
+              ("'Generated with/by' signature", re.compile(r"^\s*(?:[^\w\s]+\s*)?generated\s+(?:with|by)\b", re.I)),
+              (
+                  "agent name as a signature line",
+                  re.compile(rf"^\s*(?:[-–—~_*]{{1,3}}\s*)?{AGENT_NAME}(?:\s+(?:sonnet|opus|haiku)[\w .-]*)?\s*$", re.I),
+              ),
+          ]
+          # Applied to the whole message.
+          TEXT_PATTERNS = [
+              ("robot emoji", re.compile("\U0001F916")),
+              ("copilot-swe-agent", re.compile(r"copilot-swe-agent", re.I)),
+              ("agent e-mail address", re.compile(r"noreply@anthropic\.com", re.I)),
+              ("agent signature link", re.compile(r"claude\.com/claude-code", re.I)),
+          ]
+          # Applied to author and committer.
+          IDENTITY_NAME = re.compile(rf"^{AGENT_NAME}(?:[ -](?:swe-)?agent)?(?:\[bot\])?$", re.I)
+          IDENTITY_EMAIL = re.compile(
+              r"(?:^[^@]*(?:\+copilot|copilot-swe-agent)(?:\[bot\])?@users\.noreply\.github\.com|@anthropic\.com)$", re.I
+          )
+
+
+          def load_commits(path):
+              """`gh api --paginate` prints one JSON array per page, back to back."""
+              text = open(path, encoding="utf-8").read()
+              decoder = json.JSONDecoder()
+              commits, pos = [], 0
+              while True:
+                  while pos < len(text) and text[pos].isspace():
+                      pos += 1
+                  if pos >= len(text):
+                      return commits
+                  page, pos = decoder.raw_decode(text, pos)
+                  commits.extend(page)
+
+
+          def trailer_block(message):
+              """The final paragraph when it consists of trailer lines only (git's rule), else nothing.
+              The first paragraph is the subject and never a trailer block."""
+              paragraphs = [p for p in re.split(r"\n\s*\n", message.strip("\n")) if p.strip()]
+              if len(paragraphs) < 2:
+                  return []
+              lines = paragraphs[-1].splitlines()
+              if all(TRAILER_LINE.match(line) or TRAILER_CONTINUATION.match(line) for line in lines):
+                  return [line for line in lines if TRAILER_LINE.match(line)]
+              return []
+
+
+          def problems(item):
+              commit = item.get("commit") or {}
+              found = []
+              verification = commit.get("verification") or {}
+              if verification.get("verified") is not True:
+                  found.append("not verified (%s)" % (verification.get("reason") or "no verification data"))
+              message = commit.get("message") or ""
+              for reason, pattern in LINE_PATTERNS:
+                  if any(pattern.search(line) for line in message.splitlines()):
+                      found.append(reason)
+              if any(re.search(rf"\b{AGENT}\b", line, re.I) for line in trailer_block(message)):
+                  found.append("agent name in a trailer")
+              for reason, pattern in TEXT_PATTERNS:
+                  if pattern.search(message):
+                      found.append(reason)
+              for role in ("author", "committer"):
+                  person = commit.get(role) or {}
+                  if IDENTITY_NAME.search(person.get("name") or "") or IDENTITY_EMAIL.search(person.get("email") or ""):
+                      found.append("%s is an agent identity" % role)
+              return found
+
+
+          def main(path):
+              commits = load_commits(path)
+              if not commits:
+                  print("::error title=Commit hygiene::The pull request lists no commits; the API request failed. Failing closed.")
+                  return 1
+              if len(commits) >= API_COMMIT_LIMIT:
+                  print("::error title=Commit hygiene::The pull request has %d or more commits; the API list is truncated and cannot be judged. Failing closed." % API_COMMIT_LIMIT)
+                  return 1
+              bad = [(item.get("sha", "?"), problems(item)) for item in commits]
+              bad = [(sha, found) for sha, found in bad if found]
+              print("Checked %d commit(s)." % len(commits))
+              if not bad:
+                  print("Commit hygiene passed.")
+                  return 0
+              for sha, found in bad:
+                  print("::error title=Commit hygiene::%s: %s" % (sha, "; ".join(found)))
+                  print("%s: %s" % (sha, "; ".join(found)))
+              print(
+                  "Every commit of a pull request must be verified (SSH-signed) and must not carry a "
+                  "Co-authored-by trailer or an agent signature. Fix the listed commits (amend or "
+                  "interactive rebase, sign with -S, remove the trailer or signature line) and force-push."
+              )
+              return 1
+
+
+          sys.exit(main(sys.argv[1]))
+          PY
